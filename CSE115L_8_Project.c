@@ -25,7 +25,7 @@ struct product
     int quantity;
 } prod[MAX_PRODUCT];
 
-#define ID_LEN 15 // lesser than allocated memory for display formatting
+#define ID_LEN 15 // lesser than allocated memory for adjusting display formatting
 #define NAME_LEN 16
 #define CATEGORY_LEN 13
 
@@ -38,33 +38,18 @@ void main_menu();
 void view_all_product(); 
 void view_product_by_category(); 
 void add_product();
-void search_product();         //// == temporary comments (for explaning task of unfinished functions)
-//// create two sub functions, one for searching with a keyword that matches the first letter of the name of a product (tip = take a character input from user, match with the first letters of product name)
-                               //// and another for matching string (tip: take a string input from user, match each character of the string with product name patrially with strncmp and using a loop);
-                               //// can use display format like mine for outputting in terminal [like i used in view_product_by_category() function]
+void search_product();
 void edit_product();
-//// use a search key (preferrably name string or ID string) to select the product to modify by matching(strcmp)
-                               //// create functions or codes with ifelse/switchcase to access editing data elements like productID, name, category, price and quantity separately by user prompt or all by a separate conditon 
-                               //// (e.g. user input 0 for editing all info and 1, 2, 3, 4, 5 for productID, name, category, price and quantity respectively)
-                               //// use fseek() and ftell() [as necessary] function to access product info locations and modify file records
 void delete_product(); 
-//// take productID as input for matching string(strcmp) [deletes product info about specifically matching product ID] or take product name as input which will delete product info about every matching string (name) by partial search(strncmp)
-                               //// Both separated by ifelse/switchcase as options
-                               //// Tip: can create a separate function for partial search since it can be used in both search_product() and delete_product(), easier for reusability
 void sales_management();
-//// works with similar logic as delete function but will use product quantities' integer property for subtracting value after each successful trasaction according to number of quantities sold
-                               //// e.g. lets say milk has a stock quantity of 5, after selling 3 amount [after user enters 3 as input for prompt] the value of milk's quantity would be updated to 2
-                               //// also should display the amount of items sold (using temporary storing variables/ no need to record these in file) in terminal in a different UI view (displaying method)
-                               //// e.g. after user enters a certain quantity of a product as sold, it shows as "3 Milk/s Have been successfully sold!" in terminal 
 void logout(); 
 void pause(); // Function to stop loops from doing instaneous output, instaneous output results in missing error messege (They are printed at incredible speed and loop continues)
-void loading(); // Simple loading animation created by using ASCII characters
+void loading(int time); // Simple loading animation created by using ASCII characters
 void loading_prod_count(); // Keeps track of prod_count from file
 void save_prod_list(); // Saves product list info in the file
-void limited_str_input(char *buffer, int size, const char *prompt); // Function to take limited user input for strings
-                                                                    // used pointers to avoid hardcoding string size like buffer[20] in this function and to reference each string input correctly
+void limited_str_input(char *buffer, int size, const char *prompt); // Self-developed function to limit character inputs for strings
+                                                                    // used pointers to reference each string input correctly
                                                                     // stating size separately as parameter to use it in fgets  
-                                                                    // also considered as best practice 
 int main()
 {
     while(!login())
@@ -132,16 +117,16 @@ int main()
             add_product();
                 break;
             case 3:
-            //code
+            search_product();
                 break;
             case 4:
-            //code
+            edit_product();
                 break;
             case 5:
-            //code
+            delete_product();
                 break;
             case 6:
-            //code
+            sales_management();
                 break;
             default:
                 printf("Invalid choice, try again.\n");
@@ -186,9 +171,9 @@ void main_menu()
     printf("|  [1] View Avaliable Products   |\n");
     printf("|  [2] Add New Product           |\n");
     printf("|  [3] Search Product            |\n");
-    printf("|  [4] Update Product            |\n"); // Editing Product
+    printf("|  [4] Update Product            |\n"); 
     printf("|  [5] Delete Product            |\n");
-    printf("|  [6] Register Sales            |\n"); // Sales Management System
+    printf("|  [6] Register Sales            |\n"); 
     printf("|  [0] Logout                    |\n");
     printf("==================================\n");
     printf(">> Enter Your Choice: ");
@@ -198,18 +183,6 @@ void view_all_product()
 {
     system(CLEAR);
 
-    FILE *fp;
-
-    fp = fopen("product_list.bin", "rb"); // rb = mode for reading bin(binary) file
-
-    if(fp == NULL)
-    {
-        printf("Could not find product list info");
-        pause();
-        return;
-    }
-    else
-    {
         if(prod_count == 0)
         {
             printf("No product available at the moment.");
@@ -217,18 +190,16 @@ void view_all_product()
             return;
         }
 
-        loading();
+        loading(40);
         int i;
             printf("=============================================================================================================\n");
             printf("   Serial No.   |     Product ID     |     Product Name    |     Category     |    Price    |    Quantity    \n");
             printf("=============================================================================================================\n");
-        int temp = fread(&prod, sizeof(product), prod_count, fp);
-        for(i = 0; i < temp; i++)
+        
+        for(i = 0; i < prod_count; i++)
         {
             printf("  %-14d|   %-17s|   %-18s|   %-15s|  %-10.2lf$|      %-14d\n", i+1, prod[i].productID, prod[i].name, prod[i].category, prod[i].price, prod[i].quantity);
         }
-        fclose(fp);
-    }
 
     pause();
 }
@@ -237,18 +208,6 @@ void view_product_by_category()
 {
     system(CLEAR);
 
-    FILE *fp;
-
-    fp = fopen("product_list.bin", "rb"); 
-
-    if(fp == NULL)
-    {
-        printf("Could not find product list info");
-        pause();
-        return;
-    }
-    else
-    {
         if(prod_count == 0)
         {
             printf("No product available at the moment.");
@@ -262,11 +221,9 @@ void view_product_by_category()
 
         system(CLEAR);
 
-        loading();
+        loading(30);
 
         int i, found = 0;
-
-        fclose(fp);
 
         printf("\n                               Products Under %s Category\n", input_category);
             printf("=============================================================================================================\n");
@@ -301,8 +258,6 @@ void view_product_by_category()
            {
                 printf("                            No Products Found in this category\n");
            } 
-        
-    }
 
     pause();
 }
@@ -313,7 +268,7 @@ void add_product()
 
     FILE *fp;
 
-    fp = fopen("product_list.bin", "ab"); // ab = mode for appending bin(binary) file
+    fp = fopen("product_list.bin", "ab"); 
 
     if(fp == NULL)
     {
@@ -331,6 +286,18 @@ void add_product()
         }
 
         limited_str_input(prod[prod_count].productID, ID_LEN, "Enter product ID: ");
+
+        for(int i = 0; i < prod_count; i++)
+        {
+            if(strcmp(prod[i].productID, prod[prod_count].productID) == 0) // prevents entering duplicate product ID
+            {
+                printf("Product ID already exists!\n");
+                pause();
+                fclose(fp);
+                return;
+            }
+        }
+
         limited_str_input(prod[prod_count].name, NAME_LEN, "Enter product name: ");
         limited_str_input(prod[prod_count].category, CATEGORY_LEN, "Enter product category: ");
         
@@ -365,7 +332,7 @@ void add_product()
 
         prod_count++;
 
-        loading();
+        loading(20);
 
         printf("\nProduct added successfully!");
         
@@ -377,28 +344,315 @@ void add_product()
 
 void search_product()
 {
+    system(CLEAR);
+    int choice;
 
+    printf("[1] Search by First Letter\n[2] Search by Matching Keyword\n>> Enter choice: ");
+    scanf("%d", &choice);
+    getchar();
+
+    switch(choice)
+    {
+        case 1:
+            system(CLEAR);
+            int i, found = 0;
+            char letter;
+            printf("\nEnter First Letter: ");
+            scanf(" %c", &letter);
+            getchar();
+
+            if(toupper(letter) < 'A' || toupper(letter) > 'Z')
+            {
+                printf("Invalid input, try again.");
+                pause();
+                return;
+            }
+            
+
+            loading(30);
+            
+            printf("=============================================================================================================\n");
+            printf("   Serial No.   |     Product ID     |     Product Name    |     Category     |    Price    |    Quantity    \n");
+            printf("=============================================================================================================\n");
+        
+            for(i = 0; i < prod_count; i++)
+            {
+                if(tolower(letter) == tolower(prod[i].name[0]))
+                {
+                    found++;
+                    printf("  %-14d|   %-17s|   %-18s|   %-15s|  %-10.2lf$|      %-14d\n", i+1, prod[i].productID, prod[i].name, prod[i].category, prod[i].price, prod[i].quantity);
+                }
+            }
+
+            if(found == 0)
+            {
+                printf("                             No Products Found that start with \'%c\'\n", letter);
+            } 
+
+            pause();
+
+        break;
+
+        case 2:
+            system(CLEAR);
+            int j, matched = 0;
+            char keyword[NAME_LEN];
+
+            limited_str_input(keyword, NAME_LEN, "\nEnter keyword: ");
+
+            loading(30);
+        
+            printf("\n                                      Matching Products\n");
+            printf("=============================================================================================================\n");
+            printf("   Serial No.   |     Product ID     |     Product Name    |     Category     |    Price    |    Quantity    \n");
+            printf("=============================================================================================================\n");
+
+            for(i = 0; i < prod_count; i++)
+            {
+                if(strncasecmp(keyword, prod[i].name, strlen(keyword)) == 0)
+                {
+                    matched++;
+                    printf("  %-14d|   %-17s|   %-18s|   %-15s|  %-10.2lf$|      %-14d\n", i+1, prod[i].productID, prod[i].name, prod[i].category, prod[i].price, prod[i].quantity);
+                }
+            }
+
+            if(matched == 0)
+            {
+                printf("                                      No Products Found\n");
+            } 
+
+            pause();
+
+        break;
+
+        default:
+            printf("Invalid option!\n");
+        pause();
+        return;
+
+    }
 }
 
 void edit_product()
 {
+    system(CLEAR);
+    
+    char keyword[20];
+    limited_str_input(keyword, 20, "Enter Product ID or Name to search: ");
 
+    int index = -1;
+    for (int i = 0; i < prod_count; i++)
+    {
+        if (strcmp(prod[i].productID, keyword) == 0 || strcasecmp(prod[i].name, keyword) == 0)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    if (index == -1)
+    {
+        printf("\nProduct not found!\n");
+        pause();
+        return;
+    }
+    loading(20);
+    printf("\nProduct Found:\n");
+    printf("ID: %s\nName: %s\nCategory: %s\nPrice: %.2lf$\nQuantity: %d\n",
+           prod[index].productID, prod[index].name, prod[index].category,
+           prod[index].price, prod[index].quantity);
+
+    printf("\nDo you want to edit this product? (y/n): ");
+    char confirm;
+    scanf(" %c", &confirm);
+    getchar();
+
+    if (tolower(confirm) != 'y')
+    {
+        printf("Returning to main menu...\n");
+        pause();
+        return;
+    }
+
+    int field;
+    printf("\nSelect field to edit:\n");
+    printf("[0] Edit All\n[1] ID\n[2] Name\n[3] Category\n[4] Price\n[5] Quantity\n");
+    printf(">> Your choice: ");
+    scanf("%d", &field);
+    getchar();
+
+    switch (field)
+    {
+    case 0:
+        limited_str_input(prod[index].productID, ID_LEN, "New ID: ");
+        limited_str_input(prod[index].name, NAME_LEN, "New Name: ");
+        limited_str_input(prod[index].category, CATEGORY_LEN, "New Category: ");
+        printf("New Price: ");
+        scanf("%lf", &prod[index].price);
+        getchar();
+        printf("New Quantity: ");
+        scanf("%d", &prod[index].quantity);
+        getchar();
+        break;
+
+    case 1:
+        limited_str_input(prod[index].productID, ID_LEN, "New ID: ");
+        break;
+
+    case 2:
+        limited_str_input(prod[index].name, NAME_LEN, "New Name: ");
+        break;
+
+    case 3:
+        limited_str_input(prod[index].category, CATEGORY_LEN, "New Category: ");
+        break;
+
+    case 4:
+        printf("New Price: ");
+        scanf("%lf", &prod[index].price);
+        getchar();
+        break;
+
+    case 5:
+        printf("New Quantity: ");
+        scanf("%d", &prod[index].quantity);
+        getchar();
+        break;
+
+    default:
+        printf("Invalid option!\n");
+        pause();
+        return;
+    }
+
+    save_prod_list();
+    loading(30);
+    printf("\nProduct updated successfully!\n");
+    pause();
 }
 
 void delete_product()
 {
+    system(CLEAR);
+    int choice;
+    
+    // Ask user how they want to delete a product
+    printf("[1] Delete by Product ID\n[2] Delete by Partial Name\n>> Enter choice: ");
+    scanf("%d", &choice);
+    getchar();  
 
+    char input[20];  // For user input (ID or name)
+    int deleted = 0; // Count how many products are deleted
+
+    if (choice == 1) {
+        // Delete by exact Product ID
+        limited_str_input(input, 20, "Enter Product ID: ");
+
+        for (int i = 0; i < prod_count; i++) {
+            if (strcmp(prod[i].productID, input) == 0) {
+                // Shift all items after the deleted product to the left
+                for (int j = i; j < prod_count - 1; j++) {
+                    prod[j] = prod[j + 1];
+                }
+                prod_count--;  // Reduce total product count
+                deleted++;     // Mark as deleted
+                break;         // Exit loop after deletion
+            }
+        }
+
+    } else if (choice == 2) {
+        // Delete all products whose names match a partial string
+        limited_str_input(input, 20, "Enter partial product name: ");
+
+        for (int i = 0; i < prod_count;) {
+            if (strncasecmp(prod[i].name, input, strlen(input)) == 0) {
+                // Found a match, delete it by shifting
+                for (int j = i; j < prod_count - 1; j++) {
+                    prod[j] = prod[j + 1];
+                }
+                prod_count--;
+                deleted++;
+                // Do not increment i, as the next product has shifted into current index
+            } else {
+                i++;
+            }
+        }
+
+    } else {
+        printf("Invalid choice!\n");
+        pause();
+        return;
+    }
+
+    // Save updated product list to file
+    save_prod_list();
+
+    if (deleted)
+    {
+        loading(20);
+        printf("%d product(s) deleted successfully.\n", deleted);
+    }        
+    else
+        printf("No matching products found to delete.\n");
+
+    pause();  // Wait for user before clearing the screen
 }
 
 void sales_management()
 {
+    system(CLEAR);
+    char id[20];
+    int quantity;
 
+    // Get Product ID from user
+    limited_str_input(id, 20, "Enter Product ID to sell: ");
+
+    int found = -1;
+
+    // Search for the product by ID
+    for (int i = 0; i < prod_count; i++) {
+        if (strcmp(prod[i].productID, id) == 0) {
+            found = i;
+            break;
+        }
+    }
+
+    if (found == -1) {
+        // Product not found
+        printf("Product not found!\n");
+        pause();
+        return;
+    }
+
+    // Ask how many units to sell
+    printf("Enter quantity to sell: ");
+    scanf("%d", &quantity);
+    getchar();
+
+    // Check if requested quantity is valid
+    if (quantity <= 0 || quantity > prod[found].quantity) {
+        printf("Invalid quantity. Only %d in stock.\n", prod[found].quantity);
+        pause();
+        return;
+    }
+
+    // Reduce product quantity after sale
+    prod[found].quantity -= quantity;
+
+    // Save updated product list to file
+    save_prod_list();
+
+    loading(20);
+
+    // Confirmation message
+    printf("\n%d %s/s have been successfully sold!\n", quantity, prod[found].name);
+    pause();
 }
 
 void logout()
 {
     system(CLEAR);
-    loading();
+    loading(30);
     printf("\rLogout Successful! ");
 }
 
@@ -408,14 +662,14 @@ void pause()
     while(getchar() != '\n');
 }
 
-void loading()
+void loading(int time) //time*10 seconds
 {
     const char frames[] = "|/-\\";
     int frame_count = 4;
 
     
 
-    for (int i = 0; i < 40; i++) {
+    for (int i = 0; i < time; i++) {
         printf("\r %c", frames[i % frame_count]);
         fflush(stdout);
         SLEEP(100);
